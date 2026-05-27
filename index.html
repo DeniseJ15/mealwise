@@ -691,7 +691,7 @@ function attachEvents(){
   q("btn-suggest",()=>{ S.mealPrompt=v("meal-prompt"); generateMeal(); });
   on("sel-day","change",e=>S.selectedDay=e.target.value);
   on("sel-meal","change",e=>S.selectedMeal=e.target.value);
-  on("meal-prompt","input",e=>S.mealPrompt=e.target.value);
+  on("meal-prompt","input",e=>{ S.mealPrompt=e.target.value; });
   on("cell-input","blur",e=>{ if(S.editingCell){ const[day,meal]=S.editingCell.split("||"); S.mealPlan[day][meal]=e.target.value; save(); S.editingCell=null; render(); }});
   on("cell-input","keydown",e=>{ if(e.key==="Enter") e.target.blur(); });
   document.querySelectorAll("[data-edit]").forEach(el=>el.addEventListener("click",()=>{ S.editingCell=el.dataset.edit; render(); setTimeout(()=>document.getElementById("cell-input")?.focus(),50); }));
@@ -700,14 +700,18 @@ function attachEvents(){
   // shopping
   q("btn-show-add-item",()=>{ S.showAddItem=true; render(); });
   q("btn-cancel-item",()=>{ S.showAddItem=false; render(); });
-  on("ni-name","input",e=>{ S.newItem.name=e.target.value; render(); });
-  on("ni-qty","input",e=>S.newItem.qty=e.target.value);
-  on("ni-price","input",e=>S.newItem.price=e.target.value);
-  on("ni-store","change",e=>S.newItem.storeId=e.target.value);
-  on("ni-organic","change",e=>S.newItem.organic=e.target.checked);
+  on("ni-name","input",e=>{ S.newItem.name=e.target.value; });
+  on("ni-qty","input",e=>{ S.newItem.qty=e.target.value; });
+  on("ni-price","input",e=>{ S.newItem.price=e.target.value; });
+  on("ni-store","change",e=>{ S.newItem.storeId=e.target.value; });
+  on("ni-organic","change",e=>{ S.newItem.organic=e.target.checked; });
   on("ni-sale","change",e=>{ S.newItem.sale=e.target.checked; render(); });
-  on("ni-salenote","input",e=>S.newItem.saleNote=e.target.value);
+  on("ni-salenote","input",e=>{ S.newItem.saleNote=e.target.value; });
   q("btn-add-item",()=>{
+    // read current field values directly in case state wasn't synced
+    S.newItem.name   = v("ni-name")  || S.newItem.name;
+    S.newItem.qty    = v("ni-qty")   || S.newItem.qty;
+    S.newItem.price  = v("ni-price") || S.newItem.price;
     if(!S.newItem.name.trim()) return;
     const os=organicStatus(S.newItem.name);
     S.shoppingItems.push({id:uid(),...S.newItem,organic:S.newItem.organic||os==="dirty",organicStatus:os,checked:false});
@@ -733,14 +737,18 @@ function attachEvents(){
   });
   q("btn-show-add-staple",()=>{ S.showAddStaple=true; render(); });
   q("btn-cancel-staple",()=>{ S.showAddStaple=false; render(); });
-  on("ns-name","input",e=>{ S.newStaple.name=e.target.value; render(); });
-  on("ns-qty","input",e=>S.newStaple.qty=e.target.value);
-  on("ns-price","input",e=>S.newStaple.price=e.target.value);
-  on("ns-store","change",e=>S.newStaple.storeId=e.target.value);
-  on("ns-cat","change",e=>S.newStaple.category=e.target.value);
-  on("ns-organic","change",e=>S.newStaple.organic=e.target.checked);
-  on("ns-watch","change",e=>S.newStaple.watchSale=e.target.checked);
+  on("ns-name","input",e=>{ S.newStaple.name=e.target.value; });
+  on("ns-qty","input",e=>{ S.newStaple.qty=e.target.value; });
+  on("ns-price","input",e=>{ S.newStaple.price=e.target.value; });
+  on("ns-store","change",e=>{ S.newStaple.storeId=e.target.value; });
+  on("ns-cat","change",e=>{ S.newStaple.category=e.target.value; });
+  on("ns-organic","change",e=>{ S.newStaple.organic=e.target.checked; });
+  on("ns-watch","change",e=>{ S.newStaple.watchSale=e.target.checked; });
   q("btn-save-staple",()=>{
+    // read fields directly so keyboard dismissal never loses data
+    S.newStaple.name  = v("ns-name")  || S.newStaple.name;
+    S.newStaple.qty   = v("ns-qty")   || S.newStaple.qty;
+    S.newStaple.price = v("ns-price") || S.newStaple.price;
     if(!S.newStaple.name.trim()) return;
     const os=organicStatus(S.newStaple.name);
     S.staples.push({id:uid(),...S.newStaple,organic:S.newStaple.organic||os==="dirty",organicStatus:os});
@@ -755,8 +763,9 @@ function attachEvents(){
   }));
 
   // sales
-  on("city-input","input",e=>{ S.city=e.target.value; save(); });
-  on("sale-input","input",e=>S.saleInput=e.target.value);
+  on("city-input","input",e=>{ S.city=e.target.value; });
+  on("city-input","blur",e=>{ S.city=e.target.value; save(); });
+  on("sale-input","input",e=>{ S.saleInput=e.target.value; });
   q("btn-check-sales",()=>checkSalesOnline());
   q("btn-parse-sales",()=>{ S.saleInput=v("sale-input")||S.saleInput; parseSaleText(); });
 
