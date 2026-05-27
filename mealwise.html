@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="MealWise"/>
+<meta name="theme-color" content="#1a1a2e"/>
+<title>MealWise</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  body{font-family:'Georgia',serif;background:#f7f5f0;color:#1a1a2e;min-height:100vh;padding-bottom:80px}
+  input,select,textarea,button{font-family:'Georgia',serif;font-size:14px}
+  input,select,textarea{border:1px solid #ddd;border-radius:8px;padding:9px 11px;width:100%;background:#fff;color:#1a1a2e}
+  textarea{resize:vertical}
+  button{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700}
+  .btn-dark{background:#1a1a2e;color:#fff}
+  .btn-green{background:#3a7d44;color:#fff}
+  .btn-amber{background:#f59e0b;color:#fff}
+  .btn-light{background:#f0ece6;color:#1a1a2e;font-weight:400}
+  .btn-red{background:#fee;color:#c00;border:1px solid #fcc}
+  .card{background:#fff;border-radius:12px;border:1px solid #e8e4dd;padding:14px;margin-bottom:12px}
+  .badge{display:inline-block;border-radius:99px;font-size:10px;padding:1px 8px;font-weight:700;letter-spacing:0.4px;border:1px solid transparent}
+  .section-label{font-size:11px;color:#999;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+  .row{display:flex;gap:8px;align-items:center}
+  .row-wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  #tabs-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e4dd;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+  .tab-btn{flex:1;padding:10px 2px 8px;background:none;border:none;font-size:10px;font-weight:700;color:#aaa;display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:0}
+  .tab-btn.active{color:#1a1a2e}
+  .tab-btn .icon{font-size:20px}
+  #header{background:#1a1a2e;padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;padding-top:max(14px,env(safe-area-inset-top))}
+  #content{max-width:680px;margin:0 auto;padding:12px}
+  .store-chip{display:inline-block;border-radius:99px;font-size:11px;padding:2px 10px;font-weight:700}
+  .item-row{background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;border:1px solid #e8e4dd}
+  .item-row.checked{background:#f7f5f0}
+  .item-row.checked span.iname{text-decoration:line-through;color:#aaa}
+  .alert-box{border-radius:10px;padding:10px 14px;margin-bottom:10px}
+  .modal-overlay{position:fixed;inset:0;background:#0008;z-index:200;display:flex;align-items:flex-end}
+  .modal{background:#fff;border-radius:16px 16px 0 0;padding:20px 16px 32px;width:100%;max-height:90vh;overflow-y:auto}
+  .modal h3{font-size:16px;margin-bottom:14px}
+  .chat-bubble{max-width:82%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.5;white-space:pre-wrap}
+  .chat-user{background:#1a1a2e;color:#fff;border-radius:12px 12px 2px 12px;align-self:flex-end}
+  .chat-ai{background:#f0ece6;color:#1a1a2e;border-radius:12px 12px 12px 2px;align-self:flex-start}
+  .week-day{background:#fff;border-radius:12px;margin-bottom:8px;overflow:hidden;border:1px solid #e8e4dd}
+  .week-day-header{background:#1a1a2e;color:#fff;padding:7px 14px;font-weight:700;font-size:13px}
+  .meal-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0ece6}
+  .meal-row:last-child{border-bottom:none}
+  .meal-label{width:68px;font-size:10px;color:#999;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0}
+  .meal-val{flex:1;font-size:13px;color:#1a1a2e;padding:4px 6px;border-radius:5px;cursor:pointer;min-height:26px}
+  .meal-val:hover{background:#f7f5f0}
+  .meal-val.empty{color:#bbb}
+  .meal-input{flex:1;border:1px solid #003087;border-radius:5px;padding:4px 8px;font-size:13px}
+  .total-bar{background:#1a1a2e;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:10px}
+  .cost-input{width:90px;text-align:right;padding:5px 8px}
+  label{font-size:13px}
+  .dirty-pill{background:#fff3e0;border:1px solid #f59e0b;color:#b45309;border-radius:99px;font-size:10px;padding:1px 8px;font-weight:700}
+  .clean-pill{background:#e8f5ea;border:1px solid #3a7d44;color:#3a7d44;border-radius:99px;font-size:10px;padding:1px 8px;font-weight:700}
+  .picky-btn{border-radius:99px;padding:5px 13px;font-size:12px;font-weight:700;border:1.5px solid}
+  select option{color:#1a1a2e}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <div style="color:#fff;font-weight:700;font-size:20px;letter-spacing:-0.5px">🥦 MealWise</div>
+    <div style="color:#aaa;font-size:11px">Smart planning for real families</div>
+  </div>
+  <button id="picky-toggle" class="picky-btn"></button>
+</div>
+
+<div id="content"></div>
+
+<div id="tabs-bar">
+  <button class="tab-btn" data-tab="planner"><span class="icon">📅</span>Meals</button>
+  <button class="tab-btn" data-tab="shopping"><span class="icon">🛒</span>Shopping</button>
+  <button class="tab-btn" data-tab="staples"><span class="icon">📌</span>Staples</button>
+  <button class="tab-btn" data-tab="sales"><span class="icon">🏷️</span>Sales</button>
+  <button class="tab-btn" data-tab="stores"><span class="icon">🏪</span>Stores</button>
+  <button class="tab-btn" data-tab="chat"><span class="icon">💬</span>AI</button>
+</div>
+
+<div id="modal-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA & CONSTANTS
+// ═══════════════════════════════════════════════════════
+const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
+const DAYS  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const MEALS = ["Breakfast","Lunch","Dinner","Snack"];
+const CATEGORIES = ["Produce","Meat & Seafood","Dairy & Eggs","Pantry","Frozen","Snacks","Household","Other"];
+const DIRTY_DOZEN = ["strawberries","spinach","kale","collard greens","mustard greens","peaches","pears","nectarines","apples","grapes","bell peppers","hot peppers","cherries","blueberries","green beans","potatoes"];
+const CLEAN_FIFTEEN = ["avocados","sweet corn","pineapple","onions","papaya","sweet peas","asparagus","honeydew melon","kiwi","cabbage","mushrooms","mangoes","sweet potatoes","watermelon","carrots"];
+
+const DEFAULT_STORES = [
+  {id:"costco", name:"Costco", color:"#003087", light:"#e8eef8"},
+  {id:"aldi",   name:"Aldi",   color:"#00529B", light:"#e6f0fa"},
+  {id:"target", name:"Target", color:"#cc0000", light:"#fce8e8"},
+  {id:"sprouts",name:"Sprouts",color:"#3a7d44", light:"#e8f5ea"},
+];
+
+// ── State ──────────────────────────────────────────────
+let S = {
+  tab: "planner",
+  pickyMode: true,
+  stores: [],
+  mealPlan: {},
+  shoppingItems: [],
+  staples: [],
+  city: "",
+  aiChat: [],
+  chatLoading: false,
+  aiLoading: false,
+  saleInput: "",
+  editingCell: null,
+  staplesSubTab: "list",
+  showAddItem: false,
+  showAddStaple: false,
+  newItem: {name:"",storeId:"",qty:"",price:"",sale:false,saleNote:"",organic:false},
+  newStaple: {name:"",storeId:"",qty:"",price:"",organic:false,watchSale:false,category:"Produce"},
+  selectedDay: "Monday",
+  selectedMeal: "Dinner",
+  mealPrompt: "",
+};
+
+// ── Persistence ────────────────────────────────────────
+function load() {
+  try {
+    const stored = JSON.parse(localStorage.getItem("mealwise_v2")||"{}");
+    S.stores       = stored.stores       || JSON.parse(JSON.stringify(DEFAULT_STORES));
+    S.mealPlan     = stored.mealPlan     || makeEmptyPlan();
+    S.shoppingItems= stored.shoppingItems|| [];
+    S.staples      = stored.staples      || [];
+    S.city         = stored.city         || "";
+    S.pickyMode    = stored.pickyMode    !== undefined ? stored.pickyMode : true;
+    // ensure all days exist
+    DAYS.forEach(d=>{ if(!S.mealPlan[d]) S.mealPlan[d]={Breakfast:"",Lunch:"",Dinner:"",Snack:""}; });
+    // set default storeId for newItem/newStaple
+    if(S.stores.length) {
+      S.newItem.storeId   = S.stores[0].id;
+      S.newStaple.storeId = S.stores[0].id;
+    }
+  } catch(e){ S.stores=JSON.parse(JSON.stringify(DEFAULT_STORES)); S.mealPlan=makeEmptyPlan(); }
+}
+function save() {
+  localStorage.setItem("mealwise_v2", JSON.stringify({
+    stores:S.stores, mealPlan:S.mealPlan, shoppingItems:S.shoppingItems,
+    staples:S.staples, city:S.city, pickyMode:S.pickyMode
+  }));
+}
+function makeEmptyPlan(){ return Object.fromEntries(DAYS.map(d=>[d,{Breakfast:"",Lunch:"",Dinner:"",Snack:""}])); }
+
+// ── Helpers ────────────────────────────────────────────
+function storeById(id){ return S.stores.find(s=>s.id===id)||S.stores[0]||{name:"?",color:"#999",light:"#eee",id:""}; }
+function organicStatus(name){
+  const n=(name||"").toLowerCase();
+  if(DIRTY_DOZEN.some(d=>n.includes(d)||d.includes(n.split(" ")[0]))) return "dirty";
+  if(CLEAN_FIFTEEN.some(d=>n.includes(d)||d.includes(n.split(" ")[0]))) return "clean";
+  return null;
+}
+function fmtPrice(p){ const n=parseFloat(p); return isNaN(n)?"":"$"+n.toFixed(2); }
+function uid(){ return Date.now()+"_"+Math.random().toString(36).slice(2); }
+function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+// ═══════════════════════════════════════════════════════
+// AI
+// ═══════════════════════════════════════════════════════
+async function callAI(messages, systemPrompt, useWebSearch=false){
+  const body = { model:"claude-sonnet-4-20250514", max_tokens:1000, messages };
+  if(systemPrompt) body.system = systemPrompt;
+  if(useWebSearch) body.tools = [{type:"web_search_20250305",name:"web_search"}];
+  const res = await fetch(ANTHROPIC_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  const d = await res.json();
+  return d.content?.filter(b=>b.type==="text").map(b=>b.text).join("")||"";
+}
+
+async function generateMeal(){
+  S.aiLoading=true; render();
+  try {
+    const sales = S.shoppingItems.filter(i=>i.sale).map(i=>`${i.name} (${storeById(i.storeId).name})`).join(", ");
+    const watch = S.staples.filter(s=>s.watchSale).map(s=>s.name).join(", ");
+    const txt = await callAI([{role:"user",content:
+      `Suggest a ${S.selectedMeal.toLowerCase()} for ${S.selectedDay}.
+${S.pickyMode?"Picky child: simple kid-friendly, no mixed foods, veggies on side only.":""}
+${S.mealPrompt?"Request: "+S.mealPrompt:""}
+${sales?"On sale: "+sales:""}
+${watch?"Family staples: "+watch:""}
+Reply with ONLY a short meal name (3-6 words). Nothing else.`}]);
+    if(txt.trim()) { S.mealPlan[S.selectedDay][S.selectedMeal]=txt.trim(); save(); }
+  } catch(e){}
+  S.aiLoading=false; render();
+}
+
+async function generateWeek(){
+  S.aiLoading=true; render();
+  try {
+    const sales = S.shoppingItems.filter(i=>i.sale).map(i=>`${i.name} at ${storeById(i.storeId).name}`).join(", ");
+    const watch = S.staples.filter(s=>s.watchSale).map(s=>s.name).join(", ");
+    const txt = await callAI([{role:"user",content:
+      `Generate 7 dinners Monday–Sunday.
+${S.pickyMode?"CRITICAL: picky child. Simple separate foods: pasta, nuggets, tacos (build-your-own), grilled cheese, pizza, mac & cheese, quesadillas, burgers, hot dogs. No mixed/combined dishes.":"Varied healthy family dinners."}
+${sales?"Prioritize on-sale: "+sales:""}
+${watch?"Incorporate these if possible: "+watch:""}
+JSON only, no markdown: {"Monday":"meal","Tuesday":"meal","Wednesday":"meal","Thursday":"meal","Friday":"meal","Saturday":"meal","Sunday":"meal"}`}]);
+    const p = JSON.parse(txt.replace(/```json|```/g,"").trim());
+    DAYS.forEach(d=>{ if(p[d]) S.mealPlan[d].Dinner=p[d]; });
+    save();
+  } catch(e){}
+  S.aiLoading=false; render();
+}
+
+async function generateShoppingList(){
+  S.aiLoading=true; render();
+  try {
+    const mealsText = DAYS.flatMap(d=>MEALS.map(m=>S.mealPlan[d][m]?`${d} ${m}: ${S.mealPlan[d][m]}`:null).filter(Boolean)).join("\n");
+    if(!mealsText){S.aiLoading=false;render();return;}
+    const storeNames = S.stores.map(s=>s.name).join(", ");
+    const storeDesc = S.stores.map(s=>`${s.name}=${s.id}`).join(", ");
+    const txt = await callAI([{role:"user",content:
+      `Shopping list from meal plan. Available stores: ${storeNames}.
+Costco/warehouse=bulk items used multiple times. Sprouts/natural=fresh produce & quality meats. Budget stores=staples. General=packaged goods.
+Dirty Dozen (organic=true): ${DIRTY_DOZEN.join(", ")}
+Clean Fifteen (organic=false): ${CLEAN_FIFTEEN.join(", ")}
+Meal plan:\n${mealsText}
+Store IDs: ${storeDesc}
+JSON only: {"storeId":[{"name":"x","qty":"y","organic":false}],...} Use exact storeId values.`}]);
+    const p = JSON.parse(txt.replace(/```json|```/g,"").trim());
+    const newItems=[];
+    Object.entries(p).forEach(([sid,items])=>{
+      (items||[]).forEach(item=>{
+        if(!S.shoppingItems.some(si=>si.name.toLowerCase()===item.name.toLowerCase())){
+          const os=organicStatus(item.name);
+          newItems.push({id:uid(),name:item.name,storeId:sid,qty:item.qty||"",price:"",sale:false,saleNote:"",organic:item.organic||os==="dirty",organicStatus:os,checked:false});
+        }
+      });
+    });
+    S.shoppingItems=[...S.shoppingItems,...newItems]; save();
+    S.tab="shopping";
+  } catch(e){}
+  S.aiLoading=false; render();
+}
+
+async function parseSaleText(){
+  if(!S.saleInput.trim()) return;
+  S.aiLoading=true; render();
+  try {
+    const watch = S.staples.filter(s=>s.watchSale).map(s=>s.name).join(", ");
+    const storeNames = S.stores.map(s=>s.name+" (id:"+s.id+")").join(", ");
+    const txt = await callAI([{role:"user",content:
+      `Extract sale items from this text. Assign to one of these stores: ${storeNames}.
+${watch?"Flag watchListHit:true if any of these appear: "+watch:""}
+Text: "${S.saleInput}"
+JSON array only: [{"name":"x","storeId":"storeid","saleNote":"detail","watchListHit":false}]`}]);
+    const p = JSON.parse(txt.replace(/```json|```/g,"").trim());
+    const newItems=p.map(item=>({id:uid(),name:item.name,storeId:item.storeId||S.stores[0]?.id||"",qty:"",price:"",sale:true,saleNote:item.saleNote||"",organic:false,organicStatus:organicStatus(item.name),checked:false,watchListHit:!!item.watchListHit}));
+    S.shoppingItems=[...S.shoppingItems,...newItems]; save();
+    S.saleInput="";
+  } catch(e){}
+  S.aiLoading=false; render();
+}
+
+async function checkSalesOnline(){
+  const loc = S.city.trim() ? ` near ${S.city}` : "";
+  const watch = S.staples.filter(s=>s.watchSale).map(s=>s.name).join(", ")||"produce, meat, dairy";
+  const storeNames = S.stores.map(s=>s.name).join(", ");
+  const msg = `Search the web for this week's current sales and weekly ads at ${storeNames}${loc}. List the best deals clearly by store. My watch list items (flag if on sale): ${watch}. Also flag any Dirty Dozen produce on sale as organic.`;
+  S.aiChat=[...S.aiChat,{role:"user",content:msg}];
+  S.tab="chat"; S.chatLoading=true; render();
+  try {
+    const watch2 = S.staples.filter(s=>s.watchSale).map(s=>s.name).join(", ");
+    const reply = await callAI(S.aiChat,
+      `You are a grocery assistant for stores: ${storeNames}. Watch list: ${watch2||"none"}. Use web search to find current weekly ads. Be concise.`,
+      true);
+    S.aiChat=[...S.aiChat,{role:"assistant",content:reply}];
+  } catch(e){ S.aiChat=[...S.aiChat,{role:"assistant",content:"Search failed. Try again."}]; }
+  S.chatLoading=false; render();
+  // scroll chat to bottom
+  setTimeout(()=>{ const c=document.getElementById("chat-messages"); if(c) c.scrollTop=c.scrollHeight; },100);
+}
+
+async function sendChat(msg){
+  if(!msg.trim()) return;
+  S.aiChat=[...S.aiChat,{role:"user",content:msg}];
+  S.chatLoading=true; render();
+  const storeNames=S.stores.map(s=>s.name).join(", ");
+  const watch=S.staples.filter(s=>s.watchSale).map(s=>s.name).join(", ");
+  try {
+    const reply = await callAI(S.aiChat,
+      `You are a smart meal & grocery assistant. Stores: ${storeNames}. ${S.pickyMode?"Picky child: no mixed foods.":""}
+Meal plan: ${JSON.stringify(S.mealPlan)}. Shopping list: ${JSON.stringify(S.shoppingItems.map(i=>i.name+(i.sale?" (SALE at "+storeById(i.storeId).name+")":"")))}.
+Staples: ${S.staples.map(s=>s.name).join(", ")}. Watch list: ${watch||"none"}.
+Dirty Dozen (always organic): ${DIRTY_DOZEN.slice(0,8).join(", ")} and more. Be concise.`, true);
+    S.aiChat=[...S.aiChat,{role:"assistant",content:reply}];
+  } catch(e){ S.aiChat=[...S.aiChat,{role:"assistant",content:"Error. Try again."}]; }
+  S.chatLoading=false; render();
+  setTimeout(()=>{ const c=document.getElementById("chat-messages"); if(c) c.scrollTop=c.scrollHeight; },100);
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+function render(){
+  renderHeader();
+  renderTabs();
+  const el=document.getElementById("content");
+  if(S.tab==="planner")  el.innerHTML=renderPlanner();
+  if(S.tab==="shopping") el.innerHTML=renderShopping();
+  if(S.tab==="staples")  el.innerHTML=renderStaples();
+  if(S.tab==="sales")    el.innerHTML=renderSales();
+  if(S.tab==="stores")   el.innerHTML=renderStores();
+  if(S.tab==="chat")     el.innerHTML=renderChat();
+  attachEvents();
+  if(S.tab==="chat") setTimeout(()=>{ const c=document.getElementById("chat-messages"); if(c) c.scrollTop=c.scrollHeight; },50);
+}
+
+function renderHeader(){
+  const btn=document.getElementById("picky-toggle");
+  if(S.pickyMode){ btn.style.cssText="border-color:#f59e0b;color:#f59e0b;background:#f59e0b22"; btn.textContent="👶 Picky ON"; }
+  else { btn.style.cssText="border-color:#555;color:#aaa;background:#ffffff22"; btn.textContent="👶 Picky OFF"; }
+}
+
+function renderTabs(){
+  document.querySelectorAll(".tab-btn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.tab===S.tab);
+  });
+}
+
+// ── PLANNER ────────────────────────────────────────────
+function renderPlanner(){
+  const storeOpts = S.stores.map(s=>`<option value="${esc(s.id)}" ${S.selectedDay===s.id?"selected":""}>${esc(s.name)}</option>`).join("");
+  const dayOpts = DAYS.map(d=>`<option ${S.selectedDay===d?"selected":""}>${d}</option>`).join("");
+  const mealOpts = MEALS.map(m=>`<option ${S.selectedMeal===m?"selected":""}>${m}</option>`).join("");
+  let days="";
+  DAYS.forEach(day=>{
+    let rows="";
+    MEALS.forEach(meal=>{
+      const val=S.mealPlan[day]?.[meal]||"";
+      const cellId=`${day}||${meal}`;
+      if(S.editingCell===cellId){
+        rows+=`<div class="meal-row"><span class="meal-label">${meal}</span><input class="meal-input" id="cell-input" value="${esc(val)}" data-day="${esc(day)}" data-meal="${esc(meal)}"/></div>`;
+      } else {
+        rows+=`<div class="meal-row"><span class="meal-label">${meal}</span><span class="meal-val ${val?"":"empty"}" data-edit="${esc(cellId)}">${esc(val)||"tap to add..."}</span>${val?`<button class="clear-meal" data-day="${esc(day)}" data-meal="${esc(meal)}" style="background:none;border:none;color:#ccc;padding:2px 6px;font-size:14px">✕</button>`:""}</div>`;
+      }
+    });
+    days+=`<div class="week-day"><div class="week-day-header">${day}</div><div style="padding:6px 14px">${rows}</div></div>`;
+  });
+  return `
+  <div class="row-wrap" style="margin-bottom:14px">
+    <button class="btn-dark" id="btn-fill-week" style="flex:1" ${S.aiLoading?"disabled":""}>✨ ${S.aiLoading?"Generating...":"Fill Week's Dinners"}</button>
+    <button class="btn-green" id="btn-build-list" style="flex:1" ${S.aiLoading?"disabled":""}>🛒 Build Shopping List</button>
+  </div>
+  <div class="card">
+    <div style="font-weight:700;margin-bottom:10px;font-size:14px">⚡ Quick Meal Generator</div>
+    <div class="row-wrap" style="margin-bottom:8px">
+      <select id="sel-day" style="flex:1">${dayOpts}</select>
+      <select id="sel-meal" style="flex:1">${mealOpts}</select>
+    </div>
+    <div class="row">
+      <input id="meal-prompt" placeholder="Optional: 'quick', 'pasta', 'no chicken'..." value="${esc(S.mealPrompt)}" style="flex:1"/>
+      <button class="btn-dark" id="btn-suggest" style="white-space:nowrap;padding:9px 14px" ${S.aiLoading?"disabled":""}>${S.aiLoading?"...":"Suggest"}</button>
+    </div>
+  </div>
+  ${days}`;
+}
+
+// ── SHOPPING ───────────────────────────────────────────
+function renderShopping(){
+  // totals
+  const allUnchecked = S.shoppingItems.filter(i=>!i.checked);
+  const grandTotal = allUnchecked.reduce((a,i)=>a+(parseFloat(i.price)||0),0);
+  const storeOpts = S.stores.map(s=>`<option value="${esc(s.id)}" ${S.newItem.storeId===s.id?"selected":""}>${esc(s.name)}</option>`).join("");
+  const catOpts = S.stores.map(s=>{
+    const unc=S.shoppingItems.filter(i=>i.storeId===s.id&&!i.checked).length;
+    const sal=S.shoppingItems.filter(i=>i.storeId===s.id&&!i.checked&&i.sale).length;
+    const tot=S.shoppingItems.filter(i=>i.storeId===s.id&&!i.checked).reduce((a,i)=>a+(parseFloat(i.price)||0),0);
+    return `<div class="store-card" data-store="${esc(s.id)}" style="background:#fff;border:2px solid ${s.light};border-radius:10px;padding:9px 12px;cursor:pointer;flex:1;min-width:calc(50% - 4px)">
+      <div style="font-weight:700;font-size:14px;color:${s.color}">${esc(s.name)}</div>
+      <div style="font-size:12px;color:#999">${unc} items${sal>0?` · ${sal} 🏷️`:""}${tot>0?` · $${tot.toFixed(2)}`:""}${tot===0?" · $0.00":""}</div>
+    </div>`;
+  }).join("");
+
+  const watchHits = S.shoppingItems.filter(i=>i.watchListHit&&i.sale);
+  const alerts = watchHits.length ? `<div class="alert-box" style="background:#fffbea;border:1.5px solid #f59e0b;margin-bottom:10px">
+    <div style="font-weight:700;font-size:13px;color:#b45309;margin-bottom:4px">🔔 Watch-List Alert!</div>
+    ${watchHits.map(i=>`<div style="font-size:13px;color:#92400e">✅ <b>${esc(i.name)}</b> on sale at ${esc(storeById(i.storeId).name)}${i.saleNote?" — "+esc(i.saleNote):""}</div>`).join("")}
+  </div>` : "";
+
+  let itemsHtml="";
+  S.stores.forEach(store=>{
+    const items=S.shoppingItems.filter(i=>i.storeId===store.id);
+    if(!items.length) return;
+    const storeTotal=items.filter(i=>!i.checked).reduce((a,i)=>a+(parseFloat(i.price)||0),0);
+    itemsHtml+=`<div style="margin-bottom:16px">
+      <div class="row" style="margin-bottom:6px">
+        <div class="store-chip" style="background:${store.color};color:#fff">${esc(store.name)}</div>
+        <div style="font-size:12px;color:#999">${items.filter(i=>!i.checked).length} left · <b>$${storeTotal.toFixed(2)}</b></div>
+      </div>`;
+    items.forEach(item=>{
+      const os=item.organicStatus||organicStatus(item.name);
+      itemsHtml+=`<div class="item-row ${item.checked?"checked":""}">
+        <input type="checkbox" data-toggle="${item.id}" ${item.checked?"checked":""} style="width:17px;height:17px;accent-color:${store.color};flex-shrink:0;cursor:pointer"/>
+        <div style="flex:1;min-width:0">
+          <div class="row-wrap">
+            <span class="iname" style="font-size:14px">${esc(item.name)}</span>
+            ${item.qty?`<span style="font-size:12px;color:#999">${esc(item.qty)}</span>`:""}
+            ${item.organic?`<span class="badge" style="background:#3a7d441a;color:#3a7d44;border-color:#3a7d4433">ORGANIC</span>`:""}
+            ${item.sale?`<span class="badge" style="background:${store.color}1a;color:${store.color};border-color:${store.color}33">SALE</span>`:""}
+            ${item.watchListHit?`<span class="badge" style="background:#fffbea;color:#b45309;border-color:#f59e0b44">WATCHED🔔</span>`:""}
+            ${os==="dirty"&&!item.organic?`<span class="dirty-pill">DIRTY DOZEN</span>`:""}
+            ${os==="clean"?`<span class="clean-pill">CLEAN 15</span>`:""}
+          </div>
+          ${item.saleNote?`<div style="font-size:11px;color:${store.color};margin-top:1px">${esc(item.saleNote)}</div>`:""}
+        </div>
+        <input type="number" class="cost-input" placeholder="$" value="${esc(item.price||"")}" data-price="${item.id}" min="0" step="0.01" style="width:72px;text-align:right;padding:5px 7px;font-size:13px;border-radius:6px;border:1px solid #ddd;flex-shrink:0"/>
+        <button data-delete="${item.id}" style="background:none;border:none;color:#ddd;font-size:15px;padding:2px 4px">🗑</button>
+      </div>`;
+    });
+    itemsHtml+="</div>";
+  });
+
+  const addForm = S.showAddItem ? `<div class="card" style="margin-bottom:12px">
+    <div style="font-weight:700;margin-bottom:10px">Add Item</div>
+    <input id="ni-name" placeholder="Item name" value="${esc(S.newItem.name)}" style="margin-bottom:8px"/>
+    <div class="row-wrap" style="margin-bottom:8px">
+      <input id="ni-qty" placeholder="Qty" value="${esc(S.newItem.qty)}" style="flex:1"/>
+      <input id="ni-price" type="number" placeholder="Est. $" value="${esc(S.newItem.price)}" min="0" step="0.01" style="flex:1"/>
+      <select id="ni-store" style="flex:1">${storeOpts}</select>
+    </div>
+    <div class="row-wrap" style="margin-bottom:8px;gap:14px">
+      <label><input type="checkbox" id="ni-organic" ${S.newItem.organic?"checked":""}/> Organic</label>
+      <label><input type="checkbox" id="ni-sale" ${S.newItem.sale?"checked":""}/> On Sale</label>
+    </div>
+    ${S.newItem.sale?`<input id="ni-salenote" placeholder="Sale detail..." value="${esc(S.newItem.saleNote)}" style="margin-bottom:8px"/>`:""}
+    ${organicStatus(S.newItem.name)==="dirty"&&S.newItem.name?`<div class="dirty-pill" style="display:block;margin-bottom:8px;border-radius:6px;padding:4px 8px">⚠️ Dirty Dozen — recommend organic</div>`:""}
+    ${organicStatus(S.newItem.name)==="clean"&&S.newItem.name?`<div class="clean-pill" style="display:block;margin-bottom:8px;border-radius:6px;padding:4px 8px">✅ Clean Fifteen — conventional fine</div>`:""}
+    <div class="row">
+      <button class="btn-dark" id="btn-add-item">Add</button>
+      <button class="btn-light" id="btn-cancel-item">Cancel</button>
+    </div>
+  </div>` : "";
+
+  return `
+  ${alerts}
+  ${grandTotal>0?`<div class="total-bar"><div style="font-size:11px;color:#aaa;margin-bottom:2px">ESTIMATED TRIP TOTAL</div><div style="font-size:22px;font-weight:700">$${grandTotal.toFixed(2)}</div><div style="font-size:12px;color:#aaa">${S.stores.filter(s=>S.shoppingItems.some(i=>i.storeId===s.id&&!i.checked)).map(s=>{const t=S.shoppingItems.filter(i=>i.storeId===s.id&&!i.checked).reduce((a,i)=>a+(parseFloat(i.price)||0),0);return t>0?`${s.name} $${t.toFixed(2)}`:null}).filter(Boolean).join(" · ")}</div></div>`:""}
+  <div class="row-wrap" style="margin-bottom:10px;gap:8px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">${catOpts}</div>
+  </div>
+  <div style="text-align:right;margin-bottom:10px">
+    <button class="btn-dark" id="btn-show-add-item" style="padding:8px 14px;font-size:13px">+ Add Item</button>
+  </div>
+  ${addForm}
+  ${itemsHtml||`<div style="text-align:center;color:#aaa;padding:30px;font-size:14px">No items yet.<br>Build from your meal plan or add manually.</div>`}
+  ${S.shoppingItems.some(i=>i.checked)?`<button class="btn-red" id="btn-clear-checked" style="width:100%;margin-top:8px">🗑 Clear Checked Items</button>`:""}`;
+}
+
+// ── STAPLES ────────────────────────────────────────────
+function renderStaples(){
+  const storeOpts = S.stores.map(s=>`<option value="${esc(s.id)}" ${S.newStaple.storeId===s.id?"selected":""}>${esc(s.name)}</option>`).join("");
+  const catOpts = CATEGORIES.map(c=>`<option value="${c}" ${S.newStaple.category===c?"selected":""}>${c}</option>`).join("");
+  let itemsHtml="";
+  CATEGORIES.forEach(cat=>{
+    const items=S.staples.filter(s=>(s.category||"Other")===cat);
+    if(!items.length) return;
+    itemsHtml+=`<div style="margin-bottom:14px"><div class="section-label">${cat}</div>`;
+    items.forEach(s=>{
+      const store=storeById(s.storeId);
+      const os=s.organicStatus||organicStatus(s.name);
+      itemsHtml+=`<div class="item-row">
+        <div style="flex:1;min-width:0">
+          <div class="row-wrap">
+            <span style="font-size:14px;font-weight:500">${esc(s.name)}</span>
+            ${s.qty?`<span style="font-size:12px;color:#999">${esc(s.qty)}</span>`:""}
+            ${s.price?`<span style="font-size:12px;color:#3a7d44;font-weight:700">${fmtPrice(s.price)}</span>`:""}
+            <span class="store-chip" style="background:${store.color}22;color:${store.color};border:1px solid ${store.color}33">${esc(store.name)}</span>
+            ${s.organic?`<span class="badge" style="background:#3a7d441a;color:#3a7d44;border-color:#3a7d4433">ORGANIC</span>`:""}
+            ${s.watchSale?`<span class="badge" style="background:#fffbea;color:#b45309;border-color:#f59e0b44">WATCH🔔</span>`:""}
+            ${os==="dirty"?`<span class="dirty-pill">DIRTY DOZEN</span>`:""}
+            ${os==="clean"?`<span class="clean-pill">CLEAN 15</span>`:""}
+          </div>
+        </div>
+        <button data-watchstaple="${s.id}" title="Toggle watch" style="background:${s.watchSale?"#fffbea":"#f0ece6"};border:1px solid ${s.watchSale?"#f59e0b":"#ddd"};border-radius:6px;padding:4px 8px;font-size:13px">🔔</button>
+        <button data-deletestaple="${s.id}" style="background:none;border:none;color:#ddd;font-size:15px;padding:2px 4px">🗑</button>
+      </div>`;
+    });
+    itemsHtml+="</div>";
+  });
+
+  const watchList=S.staples.filter(s=>s.watchSale);
+  const addForm = S.showAddStaple ? `<div class="card" style="margin-bottom:12px">
+    <div style="font-weight:700;margin-bottom:10px">New Staple Item</div>
+    <input id="ns-name" placeholder="Item name" value="${esc(S.newStaple.name)}" style="margin-bottom:8px"/>
+    ${organicStatus(S.newStaple.name)==="dirty"&&S.newStaple.name?`<div class="dirty-pill" style="display:block;margin-bottom:8px;border-radius:6px;padding:4px 8px">⚠️ Dirty Dozen — marked organic automatically</div>`:""}
+    ${organicStatus(S.newStaple.name)==="clean"&&S.newStaple.name?`<div class="clean-pill" style="display:block;margin-bottom:8px;border-radius:6px;padding:4px 8px">✅ Clean Fifteen — conventional fine</div>`:""}
+    <div class="row-wrap" style="margin-bottom:8px">
+      <input id="ns-qty" placeholder="Usual qty" value="${esc(S.newStaple.qty)}" style="flex:1"/>
+      <input id="ns-price" type="number" placeholder="Usual $" value="${esc(S.newStaple.price||"")}" min="0" step="0.01" style="flex:1"/>
+      <select id="ns-store" style="flex:1">${storeOpts}</select>
+    </div>
+    <select id="ns-cat" style="margin-bottom:8px">${catOpts}</select>
+    <div class="row-wrap" style="margin-bottom:10px;gap:14px">
+      <label><input type="checkbox" id="ns-organic" ${S.newStaple.organic?"checked":""}/> Always Organic</label>
+      <label><input type="checkbox" id="ns-watch" ${S.newStaple.watchSale?"checked":""}/> 🔔 Watch for Sales</label>
+    </div>
+    <div class="row">
+      <button class="btn-dark" id="btn-save-staple">Save</button>
+      <button class="btn-light" id="btn-cancel-staple">Cancel</button>
+    </div>
+  </div>` : "";
+
+  const subTabs=["list","info"].map(t=>`<button class="tab-btn" style="position:static;flex:none;padding:6px 14px;border-radius:99px;background:${S.staplesSubTab===t?"#1a1a2e":"#e8e4dd"};color:${S.staplesSubTab===t?"#fff":"#666"};font-size:12px" data-subtab="${t}">${t==="list"?"My Staples":"Dirty Dozen Guide"}</button>`).join("");
+
+  const infoHtml=`
+  <div style="background:#fff3e0;border:1.5px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:12px">
+    <div style="font-weight:700;font-size:14px;color:#b45309;margin-bottom:8px">🚫 Dirty Dozen — Always Buy Organic</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${DIRTY_DOZEN.map(i=>`<span class="dirty-pill">${i}</span>`).join("")}</div>
+  </div>
+  <div style="background:#e8f5ea;border:1.5px solid #3a7d44;border-radius:12px;padding:14px;margin-bottom:12px">
+    <div style="font-weight:700;font-size:14px;color:#1a5c28;margin-bottom:8px">✅ Clean Fifteen — Conventional is Fine</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${CLEAN_FIFTEEN.map(i=>`<span class="clean-pill">${i}</span>`).join("")}</div>
+  </div>
+  <div style="font-size:12px;color:#999;text-align:center">2024 EWG Shopper's Guide to Pesticides</div>`;
+
+  return `
+  <div class="row-wrap" style="margin-bottom:12px">
+    <button class="btn-green" id="btn-load-staples" style="flex:1">📋 Load Into Shopping List</button>
+    <button class="btn-dark" id="btn-show-add-staple" style="flex:1">+ Add Staple</button>
+  </div>
+  <div class="row-wrap" style="margin-bottom:12px;gap:6px">${subTabs}</div>
+  ${addForm}
+  ${S.staplesSubTab==="list" ? `
+    ${S.staples.length===0&&!S.showAddStaple?`<div style="text-align:center;color:#aaa;padding:30px;font-size:14px">No staples yet.<br/>Add things you buy every week.</div>`:""}
+    ${itemsHtml}
+    ${watchList.length?`<div class="alert-box" style="background:#fffbea;border:1px solid #f59e0b;margin-top:8px">
+      <div style="font-weight:700;font-size:13px;color:#b45309;margin-bottom:4px">🔔 Sale Watch List</div>
+      <div style="font-size:13px;color:#92400e">${watchList.map(s=>esc(s.name)).join(" · ")}</div>
+      <div style="font-size:12px;color:#b45309;margin-top:4px">These get flagged when you paste or search for sales.</div>
+    </div>`:""}
+  ` : infoHtml}`;
+}
+
+// ── SALES ──────────────────────────────────────────────
+function renderSales(){
+  const saleItems=S.shoppingItems.filter(i=>i.sale);
+  let saleByStore="";
+  S.stores.forEach(store=>{
+    const items=saleItems.filter(i=>i.storeId===store.id);
+    if(!items.length) return;
+    saleByStore+=`<div style="margin-bottom:14px">
+      <div class="store-chip" style="background:${store.color};color:#fff;margin-bottom:6px">${esc(store.name)}</div>`;
+    items.forEach(item=>{
+      saleByStore+=`<div class="item-row" style="border:1.5px solid ${item.watchListHit?"#f59e0b":store.light}">
+        <span style="font-size:18px">${item.watchListHit?"🔔":"🏷️"}</span>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:14px">${esc(item.name)} ${item.watchListHit?`<span class="badge" style="background:#fffbea;color:#b45309;border-color:#f59e0b44">WATCH HIT!</span>`:""}</div>
+          ${item.saleNote?`<div style="font-size:12px;color:${store.color}">${esc(item.saleNote)}</div>`:""}
+        </div>
+      </div>`;
+    });
+    saleByStore+="</div>";
+  });
+
+  return `
+  <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:16px;margin-bottom:14px;color:#fff">
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px">🔍 Search This Week's Sales</div>
+    <div style="font-size:13px;color:#aaa;margin-bottom:10px">AI searches the web for current weekly ads at all your stores and flags your Watch List items.</div>
+    <input id="city-input" placeholder="Your city (optional)" value="${esc(S.city)}" style="background:#ffffff18;border:1px solid #444;color:#fff;margin-bottom:10px"/>
+    <button class="btn-amber" id="btn-check-sales" style="width:100%;font-size:14px" ${S.chatLoading?"disabled":""}>${S.chatLoading?"⏳ Searching...":"✨ Check This Week's Sales at All Stores"}</button>
+    ${S.chatLoading?`<div style="font-size:12px;color:#aaa;margin-top:8px;text-align:center">Results appear in the 💬 AI tab</div>`:""}
+  </div>
+  <div class="card" style="margin-bottom:14px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:6px">🏷️ Or Paste Sale Info Manually</div>
+    <div style="font-size:13px;color:#666;margin-bottom:8px">Copy text from a store app, flyer, or email. AI extracts the deals.</div>
+    <textarea id="sale-input" rows="5" placeholder="e.g. 'Sprouts: organic strawberries 2/$5, ground beef $3.99/lb. Aldi: eggs $1.79, milk $2.49'">${esc(S.saleInput)}</textarea>
+    <button class="btn-amber" id="btn-parse-sales" style="margin-top:8px" ${S.aiLoading||!S.saleInput.trim()?"disabled":""}>✨ ${S.aiLoading?"Parsing...":"Extract Sales & Add to List"}</button>
+  </div>
+  <div style="font-weight:700;margin-bottom:10px">Current Sale Items</div>
+  ${saleItems.length===0?`<div style="text-align:center;color:#aaa;padding:20px;font-size:14px">No sale items yet.</div>`:saleByStore}`;
+}
+
+// ── STORES ─────────────────────────────────────────────
+function renderStores(){
+  let list="";
+  S.stores.forEach(store=>{
+    list+=`<div class="item-row" style="margin-bottom:8px">
+      <div style="width:28px;height:28px;border-radius:8px;background:${store.color};flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px">${esc(store.name)}</div>
+        <div style="font-size:11px;color:#999">${S.shoppingItems.filter(i=>i.storeId===store.id).length} items in list · ${S.staples.filter(s=>s.storeId===store.id).length} staples</div>
+      </div>
+      <button data-editstore="${store.id}" style="background:#f0ece6;border:none;border-radius:6px;padding:5px 10px;font-size:12px">Edit</button>
+      <button data-deletestore="${store.id}" style="background:none;border:none;color:#ddd;font-size:16px;padding:2px 6px">🗑</button>
+    </div>`;
+  });
+  return `
+  <div class="card" style="margin-bottom:14px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px">🏪 Manage Your Stores</div>
+    <div style="font-size:13px;color:#666;margin-bottom:12px">Add any store you shop at. Edit names or colors. Removing a store won't delete your items.</div>
+    ${list}
+    <button class="btn-dark" id="btn-add-store" style="width:100%;margin-top:8px">+ Add New Store</button>
+  </div>
+  <div class="card" style="background:#f7f5f0;border:1px solid #e8e4dd">
+    <div style="font-size:13px;color:#666"><b>💡 Tips:</b> Add specialty stores, farmers markets, ethnic grocery stores — anything you visit regularly. Each store gets its own color-coded shopping list.</div>
+  </div>`;
+}
+
+// ── CHAT ───────────────────────────────────────────────
+function renderChat(){
+  const msgs = S.aiChat.map(m=>`<div style="display:flex;justify-content:${m.role==="user"?"flex-end":"flex-start"};margin-bottom:10px">
+    <div class="chat-bubble ${m.role==="user"?"chat-user":"chat-ai"}">${esc(m.content)}</div>
+  </div>`).join("");
+  return `
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:10px">
+    <div style="padding:9px 14px;background:#f7f5f0;border-bottom:1px solid #e8e4dd;font-size:12px;color:#666">💬 Knows your meals, list, staples, watch list & picky eater</div>
+    <div id="chat-messages" style="min-height:300px;max-height:400px;overflow-y:auto;padding:14px;display:flex;flex-direction:column">
+      ${msgs||`<div style="color:#aaa;font-size:13px;text-align:center;padding-top:40px">Try asking:<br><br><em>"Is it worth going to Sprouts this week?"</em><br><em>"Strawberries are on sale — what can I make?"</em><br><em>"How do I sneak veggies past my kid?"</em></div>`}
+      ${S.chatLoading?`<div style="color:#aaa;font-size:13px;text-align:center">⏳ thinking...</div>`:""}
+    </div>
+  </div>
+  <div class="row">
+    <input id="chat-input" placeholder="Ask about meals, sales, your list..." style="flex:1"/>
+    <button class="btn-dark" id="btn-send-chat" style="padding:10px 16px;font-size:16px" ${S.chatLoading?"disabled":""}>→</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════
+function showStoreModal(storeId){
+  const store = storeId ? storeById(storeId) : {id:uid(),name:"",color:"#555555",light:"#eeeeee"};
+  const isNew = !storeId;
+  const colors=["#003087","#00529B","#cc0000","#3a7d44","#7c3aed","#0891b2","#be185d","#b45309","#374151","#065f46"];
+  const swatches=colors.map(c=>`<div data-swatch="${c}" style="width:30px;height:30px;border-radius:8px;background:${c};cursor:pointer;border:3px solid ${store.color===c?"#fff":"transparent"};box-shadow:${store.color===c?"0 0 0 2px "+c:"none"}"></div>`).join("");
+  document.getElementById("modal-container").innerHTML=`
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <h3>${isNew?"Add New Store":"Edit Store"}</h3>
+      <div style="margin-bottom:12px">
+        <div class="section-label" style="margin-bottom:6px">Store Name</div>
+        <input id="store-name-input" value="${esc(store.name)}" placeholder="e.g. Whole Foods, Farmer's Market..."/>
+      </div>
+      <div style="margin-bottom:16px">
+        <div class="section-label" style="margin-bottom:8px">Color</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="color-swatches">${swatches}</div>
+        <input id="store-color-input" value="${store.color}" placeholder="#hex color" style="margin-top:8px"/>
+      </div>
+      <div class="row">
+        <button class="btn-dark" id="btn-save-store" data-storeid="${esc(store.id)}" data-isnew="${isNew}" style="flex:1">Save Store</button>
+        <button class="btn-light" id="btn-close-modal" style="flex:1">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+  // swatch click
+  document.querySelectorAll("[data-swatch]").forEach(sw=>{
+    sw.addEventListener("click",()=>{
+      document.getElementById("store-color-input").value=sw.dataset.swatch;
+      document.querySelectorAll("[data-swatch]").forEach(s=>{ s.style.border="3px solid transparent"; s.style.boxShadow="none"; });
+      sw.style.border="3px solid #fff"; sw.style.boxShadow="0 0 0 2px "+sw.dataset.swatch;
+    });
+  });
+  document.getElementById("btn-close-modal").addEventListener("click",closeModal);
+  document.getElementById("modal-overlay").addEventListener("click",e=>{ if(e.target.id==="modal-overlay") closeModal(); });
+  document.getElementById("btn-save-store").addEventListener("click",()=>{
+    const name=document.getElementById("store-name-input").value.trim();
+    const color=document.getElementById("store-color-input").value.trim()||"#555";
+    const light=color+"22";
+    if(!name) return;
+    if(isNew){ S.stores.push({id:store.id,name,color,light}); }
+    else { S.stores=S.stores.map(s=>s.id===storeId?{...s,name,color,light}:s); }
+    save(); closeModal(); render();
+  });
+}
+
+function closeModal(){ document.getElementById("modal-container").innerHTML=""; }
+
+// ═══════════════════════════════════════════════════════
+// EVENT ATTACHMENT
+// ═══════════════════════════════════════════════════════
+function attachEvents(){
+  // tabs
+  document.querySelectorAll(".tab-btn[data-tab]").forEach(b=>b.addEventListener("click",()=>{ S.tab=b.dataset.tab; render(); }));
+  document.querySelectorAll("[data-subtab]").forEach(b=>b.addEventListener("click",()=>{ S.staplesSubTab=b.dataset.subtab; render(); }));
+
+  // picky toggle
+  document.getElementById("picky-toggle")?.addEventListener("click",()=>{ S.pickyMode=!S.pickyMode; save(); render(); });
+
+  // planner
+  q("btn-fill-week",()=>generateWeek());
+  q("btn-build-list",()=>generateShoppingList());
+  q("btn-suggest",()=>{ S.mealPrompt=v("meal-prompt"); generateMeal(); });
+  on("sel-day","change",e=>S.selectedDay=e.target.value);
+  on("sel-meal","change",e=>S.selectedMeal=e.target.value);
+  on("meal-prompt","input",e=>S.mealPrompt=e.target.value);
+  on("cell-input","blur",e=>{ if(S.editingCell){ const[day,meal]=S.editingCell.split("||"); S.mealPlan[day][meal]=e.target.value; save(); S.editingCell=null; render(); }});
+  on("cell-input","keydown",e=>{ if(e.key==="Enter") e.target.blur(); });
+  document.querySelectorAll("[data-edit]").forEach(el=>el.addEventListener("click",()=>{ S.editingCell=el.dataset.edit; render(); setTimeout(()=>document.getElementById("cell-input")?.focus(),50); }));
+  document.querySelectorAll(".clear-meal").forEach(el=>el.addEventListener("click",()=>{ S.mealPlan[el.dataset.day][el.dataset.meal]=""; save(); render(); }));
+
+  // shopping
+  q("btn-show-add-item",()=>{ S.showAddItem=true; render(); });
+  q("btn-cancel-item",()=>{ S.showAddItem=false; render(); });
+  on("ni-name","input",e=>{ S.newItem.name=e.target.value; render(); });
+  on("ni-qty","input",e=>S.newItem.qty=e.target.value);
+  on("ni-price","input",e=>S.newItem.price=e.target.value);
+  on("ni-store","change",e=>S.newItem.storeId=e.target.value);
+  on("ni-organic","change",e=>S.newItem.organic=e.target.checked);
+  on("ni-sale","change",e=>{ S.newItem.sale=e.target.checked; render(); });
+  on("ni-salenote","input",e=>S.newItem.saleNote=e.target.value);
+  q("btn-add-item",()=>{
+    if(!S.newItem.name.trim()) return;
+    const os=organicStatus(S.newItem.name);
+    S.shoppingItems.push({id:uid(),...S.newItem,organic:S.newItem.organic||os==="dirty",organicStatus:os,checked:false});
+    S.newItem={name:"",storeId:S.stores[0]?.id||"",qty:"",price:"",sale:false,saleNote:"",organic:false};
+    S.showAddItem=false; save(); render();
+  });
+  document.querySelectorAll("[data-toggle]").forEach(el=>el.addEventListener("change",()=>{
+    S.shoppingItems=S.shoppingItems.map(i=>i.id===el.dataset.toggle?{...i,checked:!i.checked}:i); save(); render();
+  }));
+  document.querySelectorAll("[data-price]").forEach(el=>el.addEventListener("change",e=>{
+    S.shoppingItems=S.shoppingItems.map(i=>i.id===el.dataset.price?{...i,price:e.target.value}:i); save(); render();
+  }));
+  document.querySelectorAll("[data-delete]").forEach(el=>el.addEventListener("click",()=>{
+    S.shoppingItems=S.shoppingItems.filter(i=>i.id!==el.dataset.delete); save(); render();
+  }));
+  q("btn-clear-checked",()=>{ S.shoppingItems=S.shoppingItems.filter(i=>!i.checked); save(); render(); });
+
+  // staples
+  q("btn-load-staples",()=>{
+    const toAdd=S.staples.filter(s=>s.name.trim()&&!S.shoppingItems.some(i=>i.name.toLowerCase()===s.name.toLowerCase()))
+      .map(s=>{ const os=organicStatus(s.name); return {id:uid(),name:s.name,storeId:s.storeId,qty:s.qty,price:s.price||"",sale:false,saleNote:"",organic:s.organic||os==="dirty",organicStatus:os,checked:false,fromStaples:true}; });
+    S.shoppingItems=[...S.shoppingItems,...toAdd]; save(); S.tab="shopping"; render();
+  });
+  q("btn-show-add-staple",()=>{ S.showAddStaple=true; render(); });
+  q("btn-cancel-staple",()=>{ S.showAddStaple=false; render(); });
+  on("ns-name","input",e=>{ S.newStaple.name=e.target.value; render(); });
+  on("ns-qty","input",e=>S.newStaple.qty=e.target.value);
+  on("ns-price","input",e=>S.newStaple.price=e.target.value);
+  on("ns-store","change",e=>S.newStaple.storeId=e.target.value);
+  on("ns-cat","change",e=>S.newStaple.category=e.target.value);
+  on("ns-organic","change",e=>S.newStaple.organic=e.target.checked);
+  on("ns-watch","change",e=>S.newStaple.watchSale=e.target.checked);
+  q("btn-save-staple",()=>{
+    if(!S.newStaple.name.trim()) return;
+    const os=organicStatus(S.newStaple.name);
+    S.staples.push({id:uid(),...S.newStaple,organic:S.newStaple.organic||os==="dirty",organicStatus:os});
+    S.newStaple={name:"",storeId:S.stores[0]?.id||"",qty:"",price:"",organic:false,watchSale:false,category:"Produce"};
+    S.showAddStaple=false; save(); render();
+  });
+  document.querySelectorAll("[data-watchstaple]").forEach(el=>el.addEventListener("click",()=>{
+    S.staples=S.staples.map(s=>s.id===el.dataset.watchstaple?{...s,watchSale:!s.watchSale}:s); save(); render();
+  }));
+  document.querySelectorAll("[data-deletestaple]").forEach(el=>el.addEventListener("click",()=>{
+    S.staples=S.staples.filter(s=>s.id!==el.dataset.deletestaple); save(); render();
+  }));
+
+  // sales
+  on("city-input","input",e=>{ S.city=e.target.value; save(); });
+  on("sale-input","input",e=>S.saleInput=e.target.value);
+  q("btn-check-sales",()=>checkSalesOnline());
+  q("btn-parse-sales",()=>{ S.saleInput=v("sale-input")||S.saleInput; parseSaleText(); });
+
+  // stores
+  q("btn-add-store",()=>showStoreModal(null));
+  document.querySelectorAll("[data-editstore]").forEach(el=>el.addEventListener("click",()=>showStoreModal(el.dataset.editstore)));
+  document.querySelectorAll("[data-deletestore]").forEach(el=>el.addEventListener("click",()=>{
+    if(confirm(`Remove ${storeById(el.dataset.deletestore).name}? Your items won't be deleted.`)){
+      S.stores=S.stores.filter(s=>s.id!==el.dataset.deletestore); save(); render();
+    }
+  }));
+
+  // chat
+  q("btn-send-chat",()=>{ const m=v("chat-input"); if(m) sendChat(m); });
+  on("chat-input","keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); const m=v("chat-input"); if(m) sendChat(m); }});
+}
+
+// ── DOM utils ──────────────────────────────────────────
+function q(id,fn){ document.getElementById(id)?.addEventListener("click",fn); }
+function on(id,ev,fn){ document.getElementById(id)?.addEventListener(ev,fn); }
+function v(id){ return document.getElementById(id)?.value||""; }
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+load();
+render();
+</script>
+</body>
+</html>
